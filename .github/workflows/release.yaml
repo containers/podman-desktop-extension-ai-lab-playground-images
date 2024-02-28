@@ -51,8 +51,6 @@ jobs:
         run: |
           git config --local user.name ${{ github.actor }}
 
-          # commit the changes
-          git commit -m "chore: 🥁 tagging ${{ steps.TAG_UTIL.outputs.githubTag }} 🥳"
           echo "Tagging with ${{ steps.TAG_UTIL.outputs.githubTag }}"
           git tag ${{ steps.TAG_UTIL.outputs.githubTag }}
           git push origin ${{ steps.TAG_UTIL.outputs.githubTag }}
