@@ -16,7 +16,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Build and publish the extension
+name: Build and publish the playground image
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y qemu-user-static
 
-      - name: Build Extension Image
+      - name: Build Playground Image
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
