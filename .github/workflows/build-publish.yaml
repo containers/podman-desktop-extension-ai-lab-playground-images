@@ -68,4 +68,4 @@ jobs:
         with:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
-          registry: ghcr.io/${{ github.repository_owner }}/ai-studio-playground-images
+          registry: ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-ai-lab-playground-images
