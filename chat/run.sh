@@ -20,5 +20,5 @@ if [ ${MODEL_PATH} ]; then
     exit 0
 fi
 
-echo "Please set MODEL_PATH"
+echo "This image should not be used outside of Podman Desktop AI Lab extension. Missing required MODEL_PATH environment variable."
 exit 1
