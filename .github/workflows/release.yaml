@@ -46,6 +46,7 @@ jobs:
             TAG_PATTERN=${{ github.event.inputs.version }}
             echo "githubTag=v$TAG_PATTERN" >> ${GITHUB_OUTPUT}
             echo "imageVersion=$TAG_PATTERN" >> ${GITHUB_OUTPUT}
+            echo "imageVersionShort=${TAG_PATTERN%.*}" >> ${GITHUB_OUTPUT}
 
       - name: tag
         run: |
@@ -76,7 +77,8 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: ai-lab-playground-chat
-          tags: latest ${{ steps.TAG_UTIL.outputs.imageVersion }}
+          tags: latest ${{ steps.TAG_UTIL.outputs.imageVersion }} ${{ steps.TAG_UTIL.outputs.imageVersionShort }}
+          labels: io.podman.ai-lab.version=${{ steps.TAG_UTILS.outputs.imageVersion }}
           containerfiles: |
             ./chat/Containerfile
           context: ./chat
