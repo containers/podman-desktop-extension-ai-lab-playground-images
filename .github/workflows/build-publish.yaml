@@ -28,6 +28,19 @@ jobs:
   build:
     name: Build image
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - containerfile: "./chat/base/Containerfile"
+            build-image-name: "ai-lab-playground-chat"
+            archs: amd64, arm64
+          - containerfile: "./chat/vulkan/amd64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan-amd64"
+            archs: amd64
+          - containerfile: "./chat/vulkan/arm64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan-arm64"
+            archs: arm64
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
@@ -41,13 +54,13 @@ jobs:
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: ai-lab-playground-chat
+          image: ${{ matrix.build-image-name }}
           tags: nightly ${{ github.sha }}
           containerfiles: |
-            ./chat/Containerfile
+            ${{ matrix.containerfile }}
           context: ./chat
           oci: true
-          archs: amd64, arm64
+          archs: ${{ matrix.archs }}
 
       - name: Echo Outputs
         run: |

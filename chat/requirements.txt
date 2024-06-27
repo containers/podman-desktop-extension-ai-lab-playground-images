@@ -1,1 +1,2 @@
 llama-cpp-python[server]==0.2.84
+pip==24.0

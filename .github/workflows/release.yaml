@@ -32,8 +32,13 @@ env:
 
 jobs:
 
-  build:
+  tag:
     runs-on: ubuntu-22.04
+    outputs:
+      githubTag: ${{ steps.TAG_UTIL.outputs.githubTag }}
+      imageVersion: ${{ steps.TAG_UTIL.outputs.imageVersion }}
+      imageVersionShort: ${{ steps.TAG_UTIL.outputs.imageVersionShort }}
+      releaseId: ${{ steps.create_release.outputs.id}}
 
     steps:
       - uses: actions/checkout@v4
@@ -66,6 +71,27 @@ jobs:
           name: ${{ steps.TAG_UTIL.outputs.githubTag }}
           draft: true
           prerelease: false
+  
+  build:
+    name: Build ${{ matrix.build-image-name }}
+    needs: tag
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - containerfile: "./chat/base/Containerfile"
+            build-image-name: "ai-lab-playground-chat"
+            archs: amd64, arm64
+          - containerfile: "./chat/vulkan/amd64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan-amd64"
+            archs: amd64
+          - containerfile: "./chat/vulkan/arm64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan-arm64"
+            archs: arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag.outputs.githubTag}}
 
       - name: Install qemu dependency
         run: |
@@ -76,14 +102,14 @@ jobs:
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: ai-lab-playground-chat
-          tags: latest ${{ steps.TAG_UTIL.outputs.imageVersion }} ${{ steps.TAG_UTIL.outputs.imageVersionShort }}
-          labels: io.podman.ai-lab.version=${{ steps.TAG_UTILS.outputs.imageVersion }}
+          image: ${{ matrix.build-image-name }}
+          tags: latest ${{ needs.tag.outputs.imageVersion }} ${{ needs.tag.outputs.imageVersionShort }}
+          labels: io.podman.ai-lab.version=${{ needs.tag.outputs.imageVersion }}
           containerfiles: |
-            ./chat/Containerfile
+            ${{ matrix.containerfile }}
           context: ./chat
           oci: true
-          archs: amd64, arm64
+          archs: ${{ matrix.archs }}
 
       - name: Login to ghcr.io
         uses: redhat-actions/podman-login@v1
@@ -100,6 +126,11 @@ jobs:
           tags: ${{ steps.build-image.outputs.tags }}
           registry: ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-ai-lab-playground-images
 
+  release:
+    needs: [tag, build]
+    name: Release
+    runs-on: ubuntu-24.04
+    steps:
       - name: id
         run: echo the release id is ${{ needs.tag.outputs.releaseId}}
 
@@ -108,5 +139,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          id: ${{ steps.create_release.outputs.id}}
-
+          id: ${{ needs.tag.outputs.releaseId}}
