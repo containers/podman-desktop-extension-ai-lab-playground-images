@@ -35,10 +35,10 @@ jobs:
             build-image-name: "ai-lab-playground-chat"
             archs: amd64, arm64
           - containerfile: "./chat/vulkan/amd64/Containerfile"
-            build-image-name: "ai-lab-playground-chat-vulkan-amd64"
+            build-image-name: "ai-lab-playground-chat-vulkan"
             archs: amd64
           - containerfile: "./chat/vulkan/arm64/Containerfile"
-            build-image-name: "ai-lab-playground-chat-vulkan-arm64"
+            build-image-name: "ai-lab-playground-chat-vulkan"
             archs: arm64
       fail-fast: false
 
