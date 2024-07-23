@@ -32,19 +32,26 @@ env:
 
 jobs:
 
-  tag:
+  build_and_release:
+    name: Build and Release ${{ matrix.build-image-name }}
     runs-on: ubuntu-22.04
-    outputs:
-      githubTag: ${{ steps.TAG_UTIL.outputs.githubTag }}
-      imageVersion: ${{ steps.TAG_UTIL.outputs.imageVersion }}
-      imageVersionShort: ${{ steps.TAG_UTIL.outputs.imageVersionShort }}
-      releaseId: ${{ steps.create_release.outputs.id}}
-
+    strategy:
+      matrix:
+        include:
+          - containerfile: "./chat/base/Containerfile"
+            build-image-name: "ai-lab-playground-chat"
+            archs: amd64, arm64
+          - containerfile: "./chat/vulkan/amd64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan"
+            archs: amd64
+          - containerfile: "./chat/vulkan/arm64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan"
+            archs: arm64
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
-
+      
       - name: Generate tag utilities
         id: TAG_UTIL
         run: |
@@ -71,27 +78,6 @@ jobs:
           name: ${{ steps.TAG_UTIL.outputs.githubTag }}
           draft: true
           prerelease: false
-  
-  build:
-    name: Build ${{ matrix.build-image-name }}
-    needs: tag
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        include:
-          - containerfile: "./chat/base/Containerfile"
-            build-image-name: "ai-lab-playground-chat"
-            archs: amd64, arm64
-          - containerfile: "./chat/vulkan/amd64/Containerfile"
-            build-image-name: "ai-lab-playground-chat-vulkan"
-            archs: amd64
-          - containerfile: "./chat/vulkan/arm64/Containerfile"
-            build-image-name: "ai-lab-playground-chat-vulkan"
-            archs: arm64
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.tag.outputs.githubTag}}
 
       - name: Install qemu dependency
         run: |
@@ -103,8 +89,8 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ matrix.build-image-name }}
-          tags: latest ${{ needs.tag.outputs.imageVersion }} ${{ needs.tag.outputs.imageVersionShort }}
-          labels: io.podman.ai-lab.version=${{ needs.tag.outputs.imageVersion }}
+          tags: latest ${{ steps.TAG_UTIL.outputs.imageVersion }} ${{ steps.TAG_UTIL.outputs.imageVersionShort }}
+          labels: io.podman.ai-lab.version=${{ steps.TAG_UTIL.outputs.imageVersion }}
           containerfiles: |
             ${{ matrix.containerfile }}
           context: ./chat
@@ -125,18 +111,14 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
           registry: ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-ai-lab-playground-images
-
-  release:
-    needs: [tag, build]
-    name: Release
-    runs-on: ubuntu-24.04
-    steps:
+      
       - name: id
-        run: echo the release id is ${{ needs.tag.outputs.releaseId}}
+        run: echo the release id is ${{ steps.create_release.outputs.id}}
 
       - name: Publish release
         uses: StuYarrow/publish-release@v1.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          id: ${{ needs.tag.outputs.releaseId}}
+          id: ${{ steps.create_release.outputs.id}}
+   
