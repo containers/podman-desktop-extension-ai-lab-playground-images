@@ -32,14 +32,26 @@ env:
 
 jobs:
 
-  build:
+  build_and_release:
+    name: Build and Release ${{ matrix.build-image-name }}
     runs-on: ubuntu-22.04
-
+    strategy:
+      matrix:
+        include:
+          - containerfile: "./chat/base/Containerfile"
+            build-image-name: "ai-lab-playground-chat"
+            archs: amd64, arm64
+          - containerfile: "./chat/vulkan/amd64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan"
+            archs: amd64
+          - containerfile: "./chat/vulkan/arm64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-vulkan"
+            archs: arm64
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
-
+      
       - name: Generate tag utilities
         id: TAG_UTIL
         run: |
@@ -76,14 +88,14 @@ jobs:
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: ai-lab-playground-chat
+          image: ${{ matrix.build-image-name }}
           tags: latest ${{ steps.TAG_UTIL.outputs.imageVersion }} ${{ steps.TAG_UTIL.outputs.imageVersionShort }}
-          labels: io.podman.ai-lab.version=${{ steps.TAG_UTILS.outputs.imageVersion }}
+          labels: io.podman.ai-lab.version=${{ steps.TAG_UTIL.outputs.imageVersion }}
           containerfiles: |
-            ./chat/Containerfile
+            ${{ matrix.containerfile }}
           context: ./chat
           oci: true
-          archs: amd64, arm64
+          archs: ${{ matrix.archs }}
 
       - name: Login to ghcr.io
         uses: redhat-actions/podman-login@v1
@@ -99,9 +111,9 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
           registry: ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-ai-lab-playground-images
-
+      
       - name: id
-        run: echo the release id is ${{ needs.tag.outputs.releaseId}}
+        run: echo the release id is ${{ steps.create_release.outputs.id}}
 
       - name: Publish release
         uses: StuYarrow/publish-release@v1.1.2
@@ -109,4 +121,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           id: ${{ steps.create_release.outputs.id}}
-
+   
