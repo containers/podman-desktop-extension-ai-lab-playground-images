@@ -40,6 +40,9 @@ jobs:
           - containerfile: "./chat/vulkan/arm64/Containerfile"
             build-image-name: "ai-lab-playground-chat-vulkan"
             archs: arm64
+          - containerfile: "./chat/cuda/amd64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-cuda"
+            archs: amd64
       fail-fast: false
 
     steps:
