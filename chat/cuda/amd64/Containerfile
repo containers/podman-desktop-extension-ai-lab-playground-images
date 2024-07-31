@@ -19,6 +19,7 @@ USER root
 RUN  dnf install -y gcc-toolset-13-gcc gcc-toolset-13-gcc-c++
 USER 1001
 WORKDIR /locallm
+COPY requirements.txt .
 COPY run.sh .
 ENV CMAKE_ARGS="-DGGML_CUDA=on -DLLAMA_AVX2=OFF -DLLAMA_FMA=OFF -DLLAMA_F16C=OFF"
 ENV FORCE_CMAKE=1
