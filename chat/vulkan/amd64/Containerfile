@@ -16,7 +16,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Stage 1: Build dependencies
-FROM registry.access.redhat.com/ubi9/python-311:1-72 AS builder
+FROM registry.access.redhat.com/ubi9/python-311:1-72.1722518949 AS builder
 USER 0
 RUN dnf install -y python3-dnf-plugin-versionlock && \
     dnf install -y mesa-vulkan-drivers-23.3.3-1.el9.x86_64 && \
@@ -35,7 +35,7 @@ ENV FORCE_CMAKE=1
 RUN pip install --target=/locallm --no-cache-dir --upgrade -r requirements.txt
 
 # Stage 2: Create final image with minimal content
-FROM registry.access.redhat.com/ubi9/python-311:1-72
+FROM registry.access.redhat.com/ubi9/python-311:1-72.1722518949
 COPY --from=builder /locallm/ /locallm
 COPY --from=builder /usr/bin/vkcube* /usr/bin/
 COPY --from=builder /usr/bin/vulkaninfo /usr/bin/vulkaninfo
