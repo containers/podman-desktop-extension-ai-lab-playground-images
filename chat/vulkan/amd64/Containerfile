@@ -34,6 +34,7 @@ RUN ./utils/git-sync-deps
 WORKDIR build
 RUN cmake -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
+    -DSHADERC_SKIP_TESTS=ON \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
     .. \
     && ninja install
