@@ -24,7 +24,7 @@ RUN dnf install -y python3-dnf-plugin-versionlock && \
     dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     dnf install -y git cmake ninja-build gcc gcc-c++ && \
     dnf copr enable -y ligenix/enterprise-sandbox epel-9-x86_64 && \
-    dnf install -y vulkan-headers vulkan-tools && \
+    dnf install -y vulkan-headers vulkan-tools vulkan-loader-devel && \
     dnf clean all
 
 WORKDIR /locallm
