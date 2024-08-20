@@ -27,6 +27,16 @@ https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     dnf versionlock  mesa-vulkan-drivers-23.3.3-101.el9.aarch64 && \
     dnf install -y git cmake ninja-build gcc gcc-c++ vulkan-loader-devel vulkan-tools && \
     dnf clean all
+RUN git clone https://github.com/google/shaderc
+WORKDIR shaderc
+RUN ./utils/git-sync-deps
+WORKDIR build
+RUN cmake -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    .. \
+    && ninja install
+WORKDIR /locallm
 COPY requirements.txt ./
 RUN pip install --upgrade pip
 ENV CMAKE_ARGS="-DGGML_VULKAN=on"
