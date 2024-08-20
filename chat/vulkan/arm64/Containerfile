@@ -29,7 +29,7 @@ https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     dnf clean all
 COPY requirements.txt ./
 RUN pip install --upgrade pip
-ENV CMAKE_ARGS="-DLLAMA_VULKAN=on"
+ENV CMAKE_ARGS="-DGGML_VULKAN=on"
 ENV FORCE_CMAKE=1
 RUN pip install --target=/locallm --no-cache-dir --upgrade -r requirements.txt
 
