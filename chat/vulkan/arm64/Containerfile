@@ -26,10 +26,12 @@ https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     dnf install -y mesa-vulkan-drivers-23.3.3-101.el9.aarch64 && \
     dnf versionlock  mesa-vulkan-drivers-23.3.3-101.el9.aarch64 && \
     dnf install -y git cmake ninja-build gcc gcc-c++ vulkan-loader-devel vulkan-tools && \
+    dnf copr enable -y jeffmaury/shaderc epel-9-aarch64 && \
+    dnf install -y glslc && \
     dnf clean all
 COPY requirements.txt ./
 RUN pip install --upgrade pip
-ENV CMAKE_ARGS="-DLLAMA_VULKAN=on"
+ENV CMAKE_ARGS="-DGGML_VULKAN=on"
 ENV FORCE_CMAKE=1
 RUN pip install --target=/locallm --no-cache-dir --upgrade -r requirements.txt
 
