@@ -32,8 +32,37 @@ env:
 
 jobs:
 
-  build_and_release:
+  tag:
+    name: Tagging
+    runs-on: ubuntu-24.04
+    outputs:
+      githubTag: ${{ steps.TAG_UTIL.outputs.githubTag}}
+      imageVersion: ${{ steps.TAG_UTIL.outputs.imageVersion}}
+      imageVersionShort: ${{ steps.TAG_UTIL.outputs.imageVersionShort}}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: Generate tag utilities
+        id: TAG_UTIL
+        run: |
+            TAG_PATTERN=${{ github.event.inputs.version }}
+            echo "githubTag=v$TAG_PATTERN" >> ${GITHUB_OUTPUT}
+            echo "imageVersion=$TAG_PATTERN" >> ${GITHUB_OUTPUT}
+            echo "imageVersionShort=${TAG_PATTERN%.*}" >> ${GITHUB_OUTPUT}
+
+      - name: tag
+        run: |
+          git config --local user.name ${{ github.actor }}
+
+          echo "Tagging with ${{ steps.TAG_UTIL.outputs.githubTag }}"
+          git tag ${{ steps.TAG_UTIL.outputs.githubTag }}
+          git push origin ${{ steps.TAG_UTIL.outputs.githubTag }}    
+
+  build:
     name: Build and Release ${{ matrix.build-image-name }}
+    needs: tag
     runs-on: ubuntu-24.04
     strategy:
       matrix:
@@ -53,35 +82,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ needs.tag.outputs.githubTag }}
       
-      - name: Generate tag utilities
-        id: TAG_UTIL
-        run: |
-            TAG_PATTERN=${{ github.event.inputs.version }}
-            echo "githubTag=v$TAG_PATTERN" >> ${GITHUB_OUTPUT}
-            echo "imageVersion=$TAG_PATTERN" >> ${GITHUB_OUTPUT}
-            echo "imageVersionShort=${TAG_PATTERN%.*}" >> ${GITHUB_OUTPUT}
-
-      - name: tag
-        run: |
-          git config --local user.name ${{ github.actor }}
-
-          echo "Tagging with ${{ steps.TAG_UTIL.outputs.githubTag }}"
-          git tag ${{ steps.TAG_UTIL.outputs.githubTag }}
-          git push origin ${{ steps.TAG_UTIL.outputs.githubTag }}
-
-      - name: Create Release
-        id: create_release
-        uses: ncipollo/release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: ${{ steps.TAG_UTIL.outputs.githubTag }}
-          name: ${{ steps.TAG_UTIL.outputs.githubTag }}
-          draft: true
-          prerelease: false
-
       - name: Install qemu dependency
         run: |
           sudo apt-get update
@@ -92,8 +94,8 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ matrix.build-image-name }}
-          tags: latest ${{ steps.TAG_UTIL.outputs.imageVersion }} ${{ steps.TAG_UTIL.outputs.imageVersionShort }}
-          labels: io.podman.ai-lab.version=${{ steps.TAG_UTIL.outputs.imageVersion }}
+          tags: latest ${{ needs.tag.outputs.imageVersion }} ${{ needs.tag.outputs.imageVersionShort }}
+          labels: io.podman.ai-lab.version=${{ needs.tag.outputs.imageVersion }}
           containerfiles: |
             ${{ matrix.containerfile }}
           context: ./chat
@@ -114,14 +116,18 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
           registry: ghcr.io/${{ github.repository_owner }}/podman-desktop-extension-ai-lab-playground-images
-      
-      - name: id
-        run: echo the release id is ${{ steps.create_release.outputs.id}}
-
-      - name: Publish release
-        uses: StuYarrow/publish-release@v1.1.2
+          
+  release:
+    needs: [tag, build]
+    name: Release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          id: ${{ steps.create_release.outputs.id}}
+          tag: ${{ needs.tag.outputs.githubTag }}
+          name: ${{ needs.tag.outputs.githubTag }}
    
