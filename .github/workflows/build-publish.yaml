@@ -53,6 +53,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y qemu-user-static
 
+      - name: Clone llama-cpp-python
+        run: |
+          cd chat
+          ./setup.sh
+
       - name: Build Playground Image
         id: build-image
         uses: redhat-actions/buildah-build@v2
