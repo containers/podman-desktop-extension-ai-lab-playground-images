@@ -51,6 +51,8 @@ jobs:
 
       - name: Clone llama-cpp-python
         run: |
+          git config --global user.email "podman-deskop@redhat.com"
+          git config --global user.name "Podman Desktop team"
           cd chat
           ./setup.sh
   
