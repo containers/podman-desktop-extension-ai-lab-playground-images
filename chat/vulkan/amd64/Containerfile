@@ -24,7 +24,7 @@ RUN dnf install -y python3-dnf-plugin-versionlock && \
     dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     dnf install -y git cmake ninja-build gcc gcc-c++ && \
     dnf copr enable -y ligenix/enterprise-sandbox epel-9-x86_64 && \
-    dnf install -y vulkan-headers vulkan-tools vulkan-loader-devel && \
+    dnf install -y vulkan-headers vulkan-tools vulkan-loader-devel fmt-devel && \
     dnf copr enable -y ligenix/enterprise-buildtools epel-9-x86_64 && \
     dnf copr enable -y jeffmaury/shaderc epel-9-x86_64 && \
     dnf install -y glslc && \
@@ -34,7 +34,7 @@ WORKDIR /locallm
 COPY requirements.txt ./
 COPY llama-cpp-python llama-cpp-python
 RUN pip install --upgrade pip
-ENV CMAKE_ARGS="-DGGML_VULKAN=on"
+ENV CMAKE_ARGS="-DGGML_KOMPUTE=1 -DKOMPUTE_OPT_USE_BUILT_IN_FMT=OFF"
 ENV FORCE_CMAKE=1
 RUN pip install --target=/locallm --no-cache-dir --upgrade -r requirements.txt
 
