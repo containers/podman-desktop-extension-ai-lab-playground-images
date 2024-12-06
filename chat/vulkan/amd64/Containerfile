@@ -32,6 +32,7 @@ RUN dnf install -y python3-dnf-plugin-versionlock && \
 
 WORKDIR /locallm
 COPY requirements.txt ./
+COPY llama-cpp-python llama-cpp-python
 RUN pip install --upgrade pip
 ENV CMAKE_ARGS="-DGGML_VULKAN=on"
 ENV FORCE_CMAKE=1

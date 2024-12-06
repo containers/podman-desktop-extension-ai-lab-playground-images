@@ -1,2 +1,2 @@
-llama-cpp-python[server]==0.3.2
+./llama-cpp-python[server]
 pip==24.3.1

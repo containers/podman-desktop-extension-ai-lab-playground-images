@@ -30,6 +30,7 @@ https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     dnf install -y glslc && \
     dnf clean all
 COPY requirements.txt ./
+COPY llama-cpp-python llama-cpp-python
 RUN pip install --upgrade pip
 ENV CMAKE_ARGS="-DGGML_VULKAN=on"
 ENV FORCE_CMAKE=1
