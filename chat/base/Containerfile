@@ -15,7 +15,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM registry.access.redhat.com/ubi9-minimal:9.5-1734497536
+FROM registry.access.redhat.com/ubi9-minimal:9.5-1736404155
 
 RUN microdnf install -y python3 python3-pip gcc g++ shadow-utils && microdnf clean all
 RUN useradd -r -g root -m -d /home/default -s /bin/bash default
