@@ -79,6 +79,9 @@ jobs:
           - containerfile: "./chat/cuda/amd64/Containerfile"
             build-image-name: "ai-lab-playground-chat-cuda"
             archs: amd64
+          - containerfile: "./chat/intel/amd64/Containerfile"
+            build-image-name: "ai-lab-playground-chat-intel"
+            archs: amd64
     steps:
       - uses: actions/checkout@v4
         with:

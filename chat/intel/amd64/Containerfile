@@ -1,0 +1,55 @@
+#
+# Copyright (C) 2024 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Stage 1: Build dependencies
+FROM registry.access.redhat.com/ubi9/python-311:9.5-1737537151
+USER 0
+# https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2023-1/yum-dnf-zypper.html#GUID-01F72C0F-4297-49AE-ABB0-41709E2D9E2C
+RUN tee <<EOF >/etc/yum.repos.d/oneAPI.repo
+[oneAPI]
+name=Intel® oneAPI repository
+baseurl=https://yum.repos.intel.com/oneapi
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+EOF
+RUN dnf install -y intel-oneapi-base-toolkit
+RUN VERSION_ID=9.4 && \
+    dnf install -y 'dnf-command(config-manager)' && \
+    dnf config-manager --add-repo \
+    https://repositories.intel.com/gpu/rhel/${VERSION_ID}/unified/intel-gpu-${VERSION_ID}.repo  && \
+    dnf install -y \
+    intel-opencl \
+    level-zero intel-level-zero-gpu level-zero-devel && \
+    rpm -ivh https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/Packages/c/clinfo-3.0.21.02.21-4.el9.x86_64.rpm  \
+    https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/ocl-icd-2.2.13-4.el9.x86_64.rpm && \
+    yum install -y libsndfile && \
+    dnf clean all -y && \
+    rm -rf /var/cache/dnf/*
+WORKDIR /locallm
+COPY requirements.txt ./
+COPY llama-cpp-python llama-cpp-python
+RUN pip install --upgrade pip
+ENV CMAKE_ARGS="-DGGML_SYCL=ON -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx -DGGML_SYCL_F16=ON"
+ENV FORCE_CMAKE=1
+RUN . /opt/intel/oneapi/setvars.sh && pip install --target=/locallm --no-cache-dir --upgrade -r requirements.txt
+
+USER 1001
+WORKDIR /locallm
+COPY run.sh ./
+ENTRYPOINT [ "sh", "run.sh" ]
